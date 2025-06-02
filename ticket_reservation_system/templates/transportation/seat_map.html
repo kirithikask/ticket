@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Seats - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-chair me-2"></i>Select Your Seats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6>{{ schedule.route.origin }} → {{ schedule.route.destination }}</h6>
+                        <p class="text-muted mb-0">
+                            {{ schedule.departure_date }} at {{ schedule.departure_time }} | 
+                            {{ schedule.vehicle.vehicle_number }} | 
+                            ${{ schedule.price }} per seat
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Seat Legend -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-center flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="seat available me-2" style="width: 20px; height: 20px;"></div>
+                                <small>Available</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="seat occupied me-2" style="width: 20px; height: 20px;"></div>
+                                <small>Occupied</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="seat selected me-2" style="width: 20px; height: 20px;"></div>
+                                <small>Selected</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="seat window me-2" style="width: 20px; height: 20px; border-left: 4px solid #ffc107;"></div>
+                                <small>Window</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="seat aisle me-2" style="width: 20px; height: 20px; border-right: 4px solid #17a2b8;"></div>
+                                <small>Aisle</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seat Map -->
+                <div class="seat-map-container">
+                    <div class="text-center mb-3">
+                        <div class="bg-secondary text-white px-3 py-1 rounded">
+                            <i class="fas fa-steering-wheel me-2"></i>Driver
+                        </div>
+                    </div>
+                    
+                    <div class="seat-map">
+                        {% for seat in seats %}
+                        <div class="seat {% if seat.is_available %}available{% else %}occupied{% endif %} {{ seat.seat_type }}"
+                             data-seat-id="{{ seat.id }}"
+                             data-seat-type="{{ seat.seat_type }}"
+                             {% if not seat.is_available %}title="Seat not available"{% endif %}>
+                            {{ seat.seat_number }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-ticket-alt me-2"></i>Booking Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Selected Seats:</h6>
+                    <div id="selected-seats">
+                        <p class="text-muted">No seats selected</p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Price per seat:</span>
+                        <span class="fw-bold">${{ schedule.price }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Number of seats:</span>
+                        <span class="fw-bold" id="seat-count">0</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Total Amount:</span>
+                        <span class="fw-bold text-primary" id="total-amount">$0.00</span>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="button" class="btn btn-secondary" id="continue-booking" disabled>
+                        <i class="fas fa-arrow-right me-2"></i>Continue Booking
+                    </button>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        You can select up to 6 seats per booking.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-bus me-2"></i>Vehicle Information</h6>
+                <p class="mb-1"><strong>Vehicle:</strong> {{ schedule.vehicle.vehicle_number }}</p>
+                <p class="mb-1"><strong>Capacity:</strong> {{ schedule.vehicle.capacity }} seats</p>
+                <p class="mb-1"><strong>Available:</strong> {{ schedule.available_seats }} seats</p>
+                {% if schedule.vehicle.amenities %}
+                <p class="mb-0"><strong>Amenities:</strong></p>
+                <div class="mt-1">
+                    {% for amenity in schedule.vehicle.amenities %}
+                    <span class="badge bg-light text-dark me-1">{{ amenity }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form data -->
+<input type="hidden" id="schedule-id" value="{{ schedule.id }}">
+{% csrf_token %}
+
+<script>
+// Prevent main.js seat selection from interfering
+window.seatMapPageActive = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Seat map script loaded');
+
+    const seats = document.querySelectorAll('.seat.available');
+    const selectedSeats = [];
+    const maxSeats = 6;
+    const pricePerSeat = {{ schedule.price }};
+
+    console.log(`Found ${seats.length} available seats`);
+
+    // Initialize the continue button as disabled
+    const continueBtn = document.getElementById('continue-booking');
+    if (continueBtn) {
+        continueBtn.disabled = true;
+        console.log('Continue button found and disabled initially');
+
+        // Add click event listener to continue button
+        continueBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Continue button clicked!');
+
+            if (selectedSeats.length === 0) {
+                alert('Please select at least one seat before continuing.');
+                return;
+            }
+
+            console.log('Proceeding to booking with seats:', selectedSeats);
+            proceedToBooking(selectedSeats);
+        });
+    } else {
+        console.error('Continue button not found!');
+    }
+
+    seats.forEach(seat => {
+        seat.addEventListener('click', function() {
+            const seatId = this.dataset.seatId;
+            console.log(`Seat clicked: ${seatId}`);
+
+            if (this.classList.contains('selected')) {
+                // Deselect seat
+                this.classList.remove('selected');
+                const index = selectedSeats.indexOf(seatId);
+                if (index > -1) {
+                    selectedSeats.splice(index, 1);
+                }
+                console.log(`Seat ${seatId} deselected`);
+            } else if (selectedSeats.length < maxSeats) {
+                // Select seat
+                this.classList.add('selected');
+                selectedSeats.push(seatId);
+                console.log(`Seat ${seatId} selected`);
+            } else {
+                alert(`You can select maximum ${maxSeats} seats.`);
+            }
+
+            updateBookingSummary();
+        });
+    });
+
+    function updateBookingSummary() {
+        console.log(`Updating summary. Selected seats: ${selectedSeats.length}`);
+
+        const selectedSeatsContainer = document.getElementById('selected-seats');
+        const seatCountElement = document.getElementById('seat-count');
+        const totalAmountElement = document.getElementById('total-amount');
+        const continueBtn = document.getElementById('continue-booking');
+
+        if (!selectedSeatsContainer || !seatCountElement || !totalAmountElement || !continueBtn) {
+            console.error('One or more required elements not found');
+            return;
+        }
+
+        // Update selected seats display
+        selectedSeatsContainer.innerHTML = '';
+
+        if (selectedSeats.length === 0) {
+            selectedSeatsContainer.innerHTML = '<p class="text-muted">No seats selected</p>';
+        } else {
+            selectedSeats.forEach(seatId => {
+                const seat = document.querySelector(`[data-seat-id="${seatId}"]`);
+                if (seat) {
+                    const seatNumber = seat.textContent.trim();
+                    const seatType = seat.dataset.seatType;
+
+                    const seatInfo = document.createElement('div');
+                    seatInfo.className = 'badge bg-primary me-2 mb-2';
+                    seatInfo.innerHTML = `Seat ${seatNumber} (${seatType})`;
+                    selectedSeatsContainer.appendChild(seatInfo);
+                }
+            });
+        }
+
+        // Update counts and total
+        seatCountElement.textContent = selectedSeats.length;
+        const totalAmount = selectedSeats.length * pricePerSeat;
+        totalAmountElement.textContent = `$${totalAmount.toFixed(2)}`;
+
+        // Enable/disable continue button
+        continueBtn.disabled = selectedSeats.length === 0;
+
+        if (selectedSeats.length > 0) {
+            console.log('Continue button enabled');
+            continueBtn.classList.remove('btn-secondary');
+            continueBtn.classList.add('btn-success');
+        } else {
+            console.log('Continue button disabled');
+            continueBtn.classList.remove('btn-success');
+            continueBtn.classList.add('btn-secondary');
+        }
+    }
+
+    function proceedToBooking(selectedSeats) {
+        console.log('Proceeding to booking with seats:', selectedSeats);
+
+        if (selectedSeats.length === 0) {
+            alert('Please select at least one seat before continuing.');
+            return;
+        }
+
+        const scheduleId = document.getElementById('schedule-id').value;
+        if (!scheduleId) {
+            console.error('Schedule ID not found');
+            alert('Error: Schedule information missing. Please try again.');
+            return;
+        }
+
+        console.log(`Creating URL with schedule ID: ${scheduleId}`);
+
+        // Build URL with parameters
+        const baseUrl = '/bookings/create/';
+        const params = new URLSearchParams();
+        params.append('schedule_id', scheduleId);
+
+        selectedSeats.forEach(seatId => {
+            params.append('seat_ids', seatId);
+            console.log(`Added seat ${seatId} to URL`);
+        });
+
+        const fullUrl = `${baseUrl}?${params.toString()}`;
+        console.log('Navigating to:', fullUrl);
+
+        // Navigate to the booking page
+        window.location.href = fullUrl;
+    }
+
+    // Initial call to set up the summary
+    updateBookingSummary();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Booking - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-user-friends me-2"></i>Passenger Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+
+                    {% for seat_id in seat_ids %}
+                    <input type="hidden" name="seat_ids" value="{{ seat_id }}">
+                    {% endfor %}
+                    
+                    <div class="mb-4">
+                        <h6>Trip Information</h6>
+                        <div class="bg-light p-3 rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Route:</strong> {{ schedule.route.origin }} → {{ schedule.route.destination }}<br>
+                                    <strong>Date:</strong> {{ schedule.departure_date }}<br>
+                                    <strong>Time:</strong> {{ schedule.departure_time }} - {{ schedule.arrival_time }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Vehicle:</strong> {{ schedule.vehicle.vehicle_number }}<br>
+                                    <strong>Type:</strong> {{ schedule.route.transportation_type.name }}<br>
+                                    <strong>Selected Seats:</strong> {{ seat_ids|length }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="passenger-forms">
+                        {% for seat in selected_seats %}
+                        <div class="passenger-form mb-4 p-3 border rounded">
+                            <h6>Passenger {{ forloop.counter }} - Seat {{ seat.seat_number }} ({{ seat.get_seat_type_display }})</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" class="form-control" name="passenger_names" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Age *</label>
+                                    <input type="number" class="form-control" name="passenger_ages" min="1" max="120" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Gender *</label>
+                                    <select class="form-select" name="passenger_genders" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">ID Type</label>
+                                    <select class="form-select" name="passenger_id_types">
+                                        <option value="">Select ID Type</option>
+                                        <option value="passport">Passport</option>
+                                        <option value="license">Driver's License</option>
+                                        <option value="national_id">National ID</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.special_requests.id_for_label }}" class="form-label">Special Requests</label>
+                        {{ form.special_requests }}
+                        <div class="form-text">Any special requirements or requests for your journey.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="text-decoration-none">Terms and Conditions</a> and 
+                                <a href="#" class="text-decoration-none">Cancellation Policy</a>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check me-2"></i>Create Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-receipt me-2"></i>Booking Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Journey Details</h6>
+                    <p class="mb-1"><strong>From:</strong> {{ schedule.route.origin }}</p>
+                    <p class="mb-1"><strong>To:</strong> {{ schedule.route.destination }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ schedule.departure_date }}</p>
+                    <p class="mb-1"><strong>Departure:</strong> {{ schedule.departure_time }}</p>
+                    <p class="mb-3"><strong>Arrival:</strong> {{ schedule.arrival_time }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Pricing</h6>
+                    <div class="d-flex justify-content-between">
+                        <span>Price per seat:</span>
+                        <span>${{ schedule.price }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Number of seats:</span>
+                        <span>{{ seat_ids|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span>${{ subtotal|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Service fee:</span>
+                        <span>${{ service_fee|floatformat:2 }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total Amount:</span>
+                        <span class="text-primary">${{ total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Your seats will be held for 15 minutes to complete the booking.</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-shield-alt me-2"></i>Booking Protection</h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="fas fa-check text-success me-2"></i>Free cancellation up to 24 hours</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Instant booking confirmation</li>
+                    <li><i class="fas fa-check text-success me-2"></i>24/7 customer support</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Secure payment processing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-fill first passenger with user details if available
+    const firstNameInput = document.querySelector('input[name="passenger_names"]');
+    if (firstNameInput && '{{ user.first_name }}' && '{{ user.last_name }}') {
+        firstNameInput.value = '{{ user.first_name }} {{ user.last_name }}';
+    }
+    
+    // Calculate total amount
+    const seatCount = {{ request.GET.seat_ids|length }};
+    const pricePerSeat = {{ schedule.price }};
+    const serviceFee = 2.00;
+    const totalAmount = (seatCount * pricePerSeat) + serviceFee;
+    
+    // Update total amount display
+    const totalElements = document.querySelectorAll('.text-primary');
+    totalElements.forEach(element => {
+        if (element.textContent.includes('$')) {
+            element.textContent = `$${totalAmount.toFixed(2)}`;
+        }
+    });
+});
+</script>
+{% endblock %}

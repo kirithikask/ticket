@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">Welcome to Ticket Reservation System</h1>
+            <p class="lead">Book your transportation tickets easily and securely. Choose from buses, trains, and flights.</p>
+            <a class="btn btn-light btn-lg" href="{% url 'transportation:search' %}" role="button">
+                <i class="fas fa-search me-2"></i>Start Booking
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-bus fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Bus Travel</h5>
+                <p class="card-text">Comfortable and affordable bus transportation to your destination.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-train fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Train Travel</h5>
+                <p class="card-text">Fast and reliable train services with scenic routes.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-plane fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Flight Travel</h5>
+                <p class="card-text">Quick and convenient air travel for long distances.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Why Choose Us?</h2>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="text-center">
+            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+            <h5>Secure Booking</h5>
+            <p>Your payment information is protected with advanced security.</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="text-center">
+            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+            <h5>Real-time Updates</h5>
+            <p>Get instant notifications about your booking status and travel updates.</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="text-center">
+            <i class="fas fa-headset fa-2x text-info mb-2"></i>
+            <h5>24/7 Support</h5>
+            <p>Our customer support team is available round the clock to help you.</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="text-center">
+            <i class="fas fa-mobile-alt fa-2x text-primary mb-2"></i>
+            <h5>Mobile Friendly</h5>
+            <p>Book and manage your tickets on any device, anywhere, anytime.</p>
+        </div>
+    </div>
+</div>
+
+{% if not user.is_authenticated %}
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h4>Ready to start your journey?</h4>
+                <p>Create an account to enjoy personalized booking experience and exclusive offers.</p>
+                <a href="{% url 'user_accounts:register' %}" class="btn btn-primary me-2">Register Now</a>
+                <a href="{% url 'user_accounts:login' %}" class="btn btn-outline-primary">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

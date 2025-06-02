@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-user me-2"></i>My Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Personal Information</h6>
+                        <p class="mb-1"><strong>Username:</strong> {{ user.username }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+                        <p class="mb-1"><strong>First Name:</strong> {{ user.first_name|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Last Name:</strong> {{ user.last_name|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Phone:</strong> {{ user.phone_number|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Date of Birth:</strong> {{ user.date_of_birth|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Travel Preferences</h6>
+                        <p class="mb-1"><strong>Preferred Seat:</strong> {{ user.get_preferred_seat_type_display }}</p>
+                        <p class="mb-1"><strong>Member Since:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+                        {% if user.userprofile %}
+                        <p class="mb-1"><strong>Loyalty Points:</strong> {{ user.userprofile.loyalty_points }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if user.address %}
+                <div class="mt-3">
+                    <h6>Address</h6>
+                    <p class="bg-light p-3 rounded">{{ user.address }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'user_accounts:edit_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-chart-line me-2"></i>Account Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h3 class="text-primary">{{ user.userprofile.loyalty_points|default:0 }}</h3>
+                    <p class="text-muted">Loyalty Points</p>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Bookings:</span>
+                    <span class="fw-bold">{{ user.booking_set.count }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Completed Trips:</span>
+                    <span class="fw-bold">{{ user.booking_set.filter.status='completed'|length }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Active Bookings:</span>
+                    <span class="fw-bold">{{ user.booking_set.filter.status='confirmed'|length }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-star me-2"></i>Membership Benefits</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Priority booking</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Exclusive discounts</li>
+                    <li><i class="fas fa-check text-success me-2"></i>24/7 customer support</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Loyalty points rewards</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Transportation - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="search-form">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-search me-2"></i>Search Transportation
+    </h2>
+    
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label for="origin" class="form-label">From</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                <input type="text" class="form-control" id="origin" name="origin" 
+                       value="{{ search_params.origin }}" placeholder="Origin city" required>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <label for="destination" class="form-label">To</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                <input type="text" class="form-control" id="destination" name="destination" 
+                       value="{{ search_params.destination }}" placeholder="Destination city" required>
+                <button type="button" class="btn btn-outline-secondary" id="swap-locations" title="Swap locations">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-md-2">
+            <label for="departure_date" class="form-label">Departure Date</label>
+            <input type="date" class="form-control" id="departure_date" name="departure_date" 
+                   value="{{ search_params.departure_date }}" required>
+        </div>
+        
+        <div class="col-md-2">
+            <label for="transport_type" class="form-label">Transport Type</label>
+            <select class="form-select" id="transport_type" name="transport_type">
+                <option value="">All Types</option>
+                {% for transport_type in transportation_types %}
+                <option value="{{ transport_type.name }}" 
+                        {% if search_params.transport_type == transport_type.name %}selected{% endif %}>
+                    {{ transport_type.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Search
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if schedules %}
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4">Available Transportation ({{ schedules|length }} results)</h3>
+        
+        {% for schedule in schedules %}
+        <div class="card schedule-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            {% if schedule.route.transportation_type.name == 'Bus' %}
+                                <i class="fas fa-bus fa-2x text-primary"></i>
+                            {% elif schedule.route.transportation_type.name == 'Train' %}
+                                <i class="fas fa-train fa-2x text-success"></i>
+                            {% elif schedule.route.transportation_type.name == 'Flight' %}
+                                <i class="fas fa-plane fa-2x text-info"></i>
+                            {% endif %}
+                            <div class="small text-muted">{{ schedule.route.transportation_type.name }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <h5 class="mb-1">{{ schedule.route.origin }}</h5>
+                        <div class="text-muted">{{ schedule.departure_time }}</div>
+                        <div class="small text-muted">{{ schedule.departure_date }}</div>
+                    </div>
+                    
+                    <div class="col-md-1 text-center">
+                        <i class="fas fa-arrow-right text-muted"></i>
+                        <div class="small text-muted">{{ schedule.route.estimated_duration }}</div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <h5 class="mb-1">{{ schedule.route.destination }}</h5>
+                        <div class="text-muted">{{ schedule.arrival_time }}</div>
+                        <div class="small text-muted">{{ schedule.departure_date }}</div>
+                    </div>
+                    
+                    <div class="col-md-2 text-center">
+                        <h4 class="text-primary mb-1">${{ schedule.price }}</h4>
+                        <div class="small text-muted">{{ schedule.available_seats }} seats left</div>
+                        <div class="small">
+                            <span class="badge bg-secondary">{{ schedule.vehicle.vehicle_number }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-1">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'transportation:seat_map' schedule.id %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-chair me-1"></i>Select Seats
+                            </a>
+                        {% else %}
+                            <a href="{% url 'user_accounts:login' %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                Login to Book
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Search results pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% elif request.GET %}
+<div class="text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <h4>No transportation found</h4>
+    <p class="text-muted">Try adjusting your search criteria.</p>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-route fa-3x text-muted mb-3"></i>
+    <h4>Search for Transportation</h4>
+    <p class="text-muted">Enter your travel details above to find available options.</p>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSearchForm();
+});
+</script>
+{% endblock %}

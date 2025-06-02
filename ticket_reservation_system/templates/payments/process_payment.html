@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-credit-card me-2"></i>Payment Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h6>Select Payment Method</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="payment-method-card" data-method="credit_card">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-credit-card fa-2x text-primary me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">Credit Card</h6>
+                                            <small class="text-muted">Visa, MasterCard, American Express</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="payment-method-card" data-method="debit_card">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-credit-card fa-2x text-success me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">Debit Card</h6>
+                                            <small class="text-muted">Direct bank payment</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="payment-method-card" data-method="paypal">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fab fa-paypal fa-2x text-info me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">PayPal</h6>
+                                            <small class="text-muted">Pay with your PayPal account</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="payment-method-card" data-method="wallet">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-wallet fa-2x text-warning me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">Digital Wallet</h6>
+                                            <small class="text-muted">Apple Pay, Google Pay</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="payment_method" id="payment-method-input" required>
+                    </div>
+                    
+                    <div id="card-details" style="display: none;">
+                        <h6>Card Details</h6>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-control" placeholder="123" maxlength="4">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" class="form-control" placeholder="John Doe">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="save-payment" checked>
+                            <label class="form-check-label" for="save-payment">
+                                Save payment method for future bookings
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms-payment" required>
+                            <label class="form-check-label" for="terms-payment">
+                                I agree to the <a href="#" class="text-decoration-none">Payment Terms</a> and authorize this transaction
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Your payment information is encrypted and secure. We use industry-standard SSL encryption.
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-lock me-2"></i>Pay ${{ booking.total_amount }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Booking Details</h6>
+                    <p class="mb-1"><strong>Booking ID:</strong> {{ booking.booking_id }}</p>
+                    <p class="mb-1"><strong>Route:</strong> {{ booking.schedule.route.origin }} → {{ booking.schedule.route.destination }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ booking.schedule.departure_date }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ booking.schedule.departure_time }}</p>
+                    <p class="mb-3"><strong>Passengers:</strong> {{ booking.booked_seats.count }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Passengers & Seats</h6>
+                    {% for booking_seat in booking.booked_seats.all %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ booking_seat.passenger_name }}</span>
+                        <span>Seat {{ booking_seat.seat.seat_number }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Payment Breakdown</h6>
+                    <div class="d-flex justify-content-between">
+                        <span>Ticket Price ({{ booking.booked_seats.count }} × ${{ booking.schedule.price }}):</span>
+                        <span>${{ booking.schedule.price|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Service Fee:</span>
+                        <span>$2.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Taxes:</span>
+                        <span>$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total Amount:</span>
+                        <span class="text-success">${{ booking.total_amount }}</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock me-2"></i>
+                    <small>Complete payment within 10 minutes to secure your booking.</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-shield-alt me-2"></i>Security Features</h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="fas fa-check text-success me-2"></i>256-bit SSL encryption</li>
+                    <li><i class="fas fa-check text-success me-2"></i>PCI DSS compliant</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Fraud protection</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Secure payment gateway</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize payment methods
+    initializePaymentMethods();
+    
+    // Make sure at least one payment method is selected by default
+    const firstPaymentMethod = document.querySelector('.payment-method-card');
+    if (firstPaymentMethod) {
+        firstPaymentMethod.click();
+    }
+    
+    // Form validation before submission
+    const paymentForm = document.querySelector('form');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', function(e) {
+            const paymentMethodInput = document.getElementById('payment-method-input');
+            if (!paymentMethodInput.value) {
+                e.preventDefault();
+                alert('Please select a payment method');
+                return false;
+            }
+            
+            const termsCheckbox = document.getElementById('terms-payment');
+            if (!termsCheckbox.checked) {
+                e.preventDefault();
+                alert('Please agree to the payment terms');
+                return false;
+            }
+        });
+    }
+    
+    // Show/hide card details based on payment method
+    const paymentCards = document.querySelectorAll('.payment-method-card');
+    const cardDetails = document.getElementById('card-details');
+    
+    paymentCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const method = this.dataset.method;
+            if (method === 'credit_card' || method === 'debit_card') {
+                cardDetails.style.display = 'block';
+            } else {
+                cardDetails.style.display = 'none';
+            }
+        });
+    });
+    
+    // Format card number input
+    const cardNumberInput = document.querySelector('input[placeholder="1234 5678 9012 3456"]');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function() {
+            let value = this.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            this.value = formattedValue;
+        });
+    }
+    
+    // Format expiry date input
+    const expiryInput = document.querySelector('input[placeholder="MM/YY"]');
+    if (expiryInput) {
+        expiryInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            this.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
+

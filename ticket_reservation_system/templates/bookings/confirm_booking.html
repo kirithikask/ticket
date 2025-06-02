@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Booking - Ticket Reservation System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-check-circle me-2"></i>Booking Confirmation</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Booking Created Successfully!</strong><br>
+                    Your booking ID is <strong>{{ booking.booking_id }}</strong>. Please proceed to payment to confirm your reservation.
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Journey Details</h6>
+                        <p class="mb-1"><strong>From:</strong> {{ booking.schedule.route.origin }}</p>
+                        <p class="mb-1"><strong>To:</strong> {{ booking.schedule.route.destination }}</p>
+                        <p class="mb-1"><strong>Date:</strong> {{ booking.schedule.departure_date }}</p>
+                        <p class="mb-1"><strong>Departure:</strong> {{ booking.schedule.departure_time }}</p>
+                        <p class="mb-1"><strong>Arrival:</strong> {{ booking.schedule.arrival_time }}</p>
+                        <p class="mb-1"><strong>Vehicle:</strong> {{ booking.schedule.vehicle.vehicle_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Booking Information</h6>
+                        <p class="mb-1"><strong>Booking ID:</strong> {{ booking.booking_id }}</p>
+                        <p class="mb-1"><strong>Status:</strong> 
+                            <span class="booking-status status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                        </p>
+                        <p class="mb-1"><strong>Total Amount:</strong> ${{ booking.total_amount }}</p>
+                        <p class="mb-1"><strong>Passengers:</strong> {{ booking.booked_seats.count }}</p>
+                        <p class="mb-1"><strong>Booking Date:</strong> {{ booking.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Passenger Details</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Passenger Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Seat Number</th>
+                                    <th>Seat Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking_seat in booking.booked_seats.all %}
+                                <tr>
+                                    <td>{{ booking_seat.passenger_name }}</td>
+                                    <td>{{ booking_seat.passenger_age }}</td>
+                                    <td>{{ booking_seat.get_passenger_gender_display }}</td>
+                                    <td>{{ booking_seat.seat.seat_number }}</td>
+                                    <td>{{ booking_seat.seat.get_seat_type_display }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if booking.special_requests %}
+                <div class="mb-4">
+                    <h6>Special Requests</h6>
+                    <p class="bg-light p-3 rounded">{{ booking.special_requests }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>View All Bookings
+                    </a>
+                    <a href="{% url 'payments:process_payment' booking.booking_id %}" class="btn btn-success">
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Payment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-info-circle me-2"></i>Important Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Payment Required</strong><br>
+                    Complete your payment within 15 minutes to secure your booking.
+                </div>
+                
+                <h6>Next Steps:</h6>
+                <ol>
+                    <li>Click "Proceed to Payment" to complete your booking</li>
+                    <li>Choose your preferred payment method</li>
+                    <li>Receive booking confirmation via email</li>
+                    <li>Show your booking confirmation when traveling</li>
+                </ol>
+                
+                <h6 class="mt-3">Cancellation Policy:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Free cancellation up to 24 hours before departure</li>
+                    <li><i class="fas fa-check text-success me-2"></i>50% refund up to 2 hours before departure</li>
+                    <li><i class="fas fa-times text-danger me-2"></i>No refund after departure time</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-headset me-2"></i>Need Help?</h6>
+                <p>Contact our customer support team:</p>
+                <p class="mb-1"><strong>Phone:</strong> +1 (555) 123-4567</p>
+                <p class="mb-1"><strong>Email:</strong> support@ticketreservation.com</p>
+                <p class="mb-0"><strong>Hours:</strong> 24/7</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
